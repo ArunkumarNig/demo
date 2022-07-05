@@ -8,19 +8,26 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  Deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: "12.x"
-      - run: npm ci
-      - run: npm run build
+            
+      - name: Setup node
+      - uses: actions/setup-node@v2
+
+      - name: Install Dependencies
+      - uses: npm install
+
+      - name: Build static file
+      - uses: npm run build
+
+      - name: Configure AWS Credentials
+      - uses: aws-actions/configure-aws-credentials@v1
+      with:
+      aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID  }}
+      aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY  }}
+
       - name: Deploy
-        uses: crazy-max/ghaction-github-pages@v1
-        with:
-          target_branch: gh-pages
-          build_dir: build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: aws s3 sync ./build s3://
